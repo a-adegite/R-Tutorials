@@ -1,0 +1,699 @@
+---
+title: "Rshiny Note"
+output: html_document
+runtime: shiny
+date: "2026-01-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Rshiny
+
+R Shiny is an R package that lets you build interactive web applications directly from R, without needing to know HTML, CSS, or JavaScript. It as a way to turn R code into a web app with buttons, sliders, and live-updating results.
+
+## Structure of Rshiny
+Every Shiny app has three required parts:  
+
+1. **UI (User Interface)**  
+
+    * Controls what the user see
+    * Includes text, inputs, and outputs
+
+2. **The Server**  
+
+    * Controls how the app behaves
+    * Contains logic and calculations
+
+3. **shinyApp()**
+
+    * Connects the UI and server
+    * Runs the application
+
+## **User Interface**
+fluidPage allows you create a fluid-layout that scales to whatever browser size <br>
+**the fluid layout is structured this way:** <br>
+
+_fluidPage(Elements to include in the pages, title="Home", theme="cerulean")_ 
+
+title = "Home" allows you to specify the browser window title (in this case, home) 
+
+theme = "cerulean" allows you to choose a cerulean theme
+
+```{r}
+
+ui <- fluidPage(
+  h1("Welcome to My First Rshiny App"),
+  title = "Home",
+  theme = "Cerulean"
+)
+
+```
+
+## **The Server**
+In Shiny, the server defines the logic of your app (what happens when the user interacts with inputs). The server is usually a R function that takes 2-3 parameters:
+
+
+**input:** contains all the values from the UI inputs (like sliders, text boxes, dropdowns)
+
+**output:** stores the reactive outputs (text, plots, tables) that appear in the UI
+
+**session:** manages the current user session, useful for advanced tasks
+
+```{r}
+server <- function(input, output, session) {
+  # Your app logic goes here
+} 
+```
+
+## **ShinyApp()**
+shinyApp() is the function that runs your Shiny app. It connects your ui and server so Shiny knows what to display and how to respond.
+
+```{r}
+shinyApp(ui = ui, server = server)
+```
+
+## **Important Shiny Concepts**
+
+### Inputs
+Things the user controls:
+
+- `sliderInput()`: This creates a slider input and takes a minimum parameter of inputId, label, min, max and value
+- `textInput()`: Creates a text box input and takes a minimum of inputId, label, and value
+- `selectInput()`: Creates a dropdown input and takes a minimum of inputId, label, and choices
+
+### Outputs
+Things the app displays:
+
+- `textOutput()`: Creates a placeholder for text output
+- `plotOutput()`: Creates a placeholder for a plot
+- `tableOutput()`: Creates a placeholder for a table
+
+### Render Functions
+Used in the server to generate outputs:
+
+- `renderText()`: Generates text for textOutput()
+- `renderPlot()`: Generates a plot for plotOutput()
+- `renderTable()`: Generates a table for tableOutput()
+
+
+## **Sample App**
+
+```{r}
+ui <- fluidPage(
+  h1("First App"),      # Main heading
+  theme = "cerulean",   # Apply a theme
+  title = "Sample App", # Browser tab title
+  
+  # elements
+  textInput(inputId = "Firstname", label = "Enter your first name", placeholder = "John"),
+  br(),
+  textOutput("greeting"),# Creates a placeholder where server-generated text will appear.
+  
+)
+
+
+# server/backend logic for your interactive app
+server <- function(input, output, session) {
+  
+  # renderText({}) allows you to send reactive text to the UI.
+  # In this case, it updates the placeholder text (textOutput with id "greeting")
+  # whenever the user types in the textInput "Firstname".
+  output$greeting <- renderText({
+    paste("Hello,", input$Firstname)
+  })
+  
+}
+
+shinyApp(ui, server) # Allows you to run the shiny app
+
+```
+
+## **Creating an Interactive Histogram**
+
+
+```{r}
+
+# User Interface
+ui <- fluidPage(
+  h1("Interactive Histogram"),
+  title = "Interactive Histogram Viewer",
+  
+  # elements
+  sliderInput(
+    inputId = "number",
+    label = "Choose a number",
+    min = 10,
+    max = 1000,
+    value = 20
+  ),
+  
+  br(),
+  
+  # tags$div() creates an HTML <div> container.
+  tags$div(
+    style = "text-align: center;", # centers all elements inside this div.
+    plotOutput("histogram"), # Placeholder for the histogram plot generated in the server
+    verbatimTextOutput("stat") # Placeholder for preformatted text, usually console-style output
+  )
+)
+
+# Backend Logic
+server <- function(input, output, session) {
+  data <- reactive({ rnorm(input$number) })
+  output$histogram <-  renderPlot({
+    hist(data())
+  })
+  
+  output$stat <- renderPrint({
+    # renderPrint({ ... }) generates preformatted text output in the UI.
+    summary(data())
+  })
+}
+
+# ShinyApp
+shinyApp(ui = ui, server = server)
+
+```
+
+## **Interactive Histogram with Action Button**
+This example shows how to generate a histogram only when a button is clicked, instead of updating automatically when the slider changes. We use `eventReactive()` for this
+
+```{r}
+ui <- fluidPage(
+  h1("Histogram with Action Button"),
+  
+  # Elements
+  sliderInput(
+    inputId = "num",
+    label = "Choose a number",
+    value = 25, 
+    min = 1, 
+    max = 300,
+    step = 10 #Step size for slider movement
+  ),
+  
+  # Creates an action button
+  actionButton(
+    inputId = "go",
+    label = "Update",
+    class = "btn-danger" # uses bootstrap class button
+  ),
+  
+  br(),
+  
+  br(),
+  
+  # wellPanel(): Creates a panel with a slightly inset border and gray background.
+  wellPanel(plotOutput("action_hist"))
+)
+
+
+server <- function(input, output, session) {
+  
+  # eventReactive: generates random numbers ONLY when button is clicked
+  data <- eventReactive(input$go, {
+    rnorm(input$num) # Generate 'input$num' random normal numbers
+  })
+  output$action_hist <- renderPlot({
+    hist(data())
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+## **Creating a two column layout**
+
+To create a two column layout, we use `sidebarLayout(...)` 
+
+**This layout divides the page into two sections:**
+
+1. sidebarPanel() - the left column, typically used for inputs and controls such as text boxes, sliders, and buttons.
+
+2. mainPanel() – the right column, used to display outputs such as plots, tables, and text.
+
+
+```{r}
+
+ui <- fluidPage(
+  h1("Panel with 2 column layout"),
+  theme = "cerulean",
+  
+  sidebarLayout(
+    sidebarPanel(textInput('name', 'Enter Name', 'David')),
+    mainPanel(plotOutput('trend'))
+  )
+)
+
+server <- function(input, output, session) {
+  output$trend <- renderPlot({
+    ggplot()
+    
+  })
+}
+
+shinyApp(ui = ui, server = server)
+  
+```
+
+
+## **Interactive ScatterPlot**
+```{r}
+# Import shiny package
+library(ggplot2)
+
+# Define fluid page layout with enhanced styling
+ui <- fluidPage(
+  titlePanel("Interactive Scatter Plot"),
+  
+  # Input: Numeric input for the number of points
+  sidebarLayout(
+    sidebarPanel(
+      numericInput(inputId = "num_points", label = "Number of Points", 
+                   value = 50, min = 1, max = 100),
+      br(),
+      actionButton(inputId = "update_plot", label = "Update Plot")
+    ),
+    
+    # Output: Enhanced scatter plot
+    mainPanel(
+      plotOutput(outputId = "scatter_plot", height = "400px")
+    )
+  )
+)
+
+# Server logic
+server <- function(input, output) {
+  # Generate random data based on user input
+  generate_data <- reactive({
+    data.frame(
+      x = rnorm(input$num_points),
+      y = rnorm(input$num_points)
+    )
+  })
+  
+  # Render enhanced scatter plot with interactivity
+  output$scatter_plot <- renderPlot({
+    # Plot the generated data with enhanced aesthetics
+    plot(generate_data()$x, generate_data()$y, 
+         main = "Interactive Scatter Plot",
+         xlab = "X-axis",
+         ylab = "Y-axis",
+         pch = 19, col = "skyblue",
+         xlim = c(-3, 3), ylim = c(-3, 3),
+         cex = 1.5)
+  })
+  
+  # Add interactivity: Update plot when the "Update Plot" button is pressed
+  observeEvent(input$update_plot, {
+    invalidateLater(500, session)  # Add a slight delay for a smoother update
+    output$scatter_plot <- renderPlot({
+      plot(generate_data()$x, generate_data()$y, 
+           main = "Interactive Scatter Plot",
+           xlab = "X-axis",
+           ylab = "Y-axis",
+           pch = 19, col = "skyblue",
+           xlim = c(-3, 3), ylim = c(-3, 3),
+           cex = 1.5)
+    })
+  })
+}
+
+# Create enhanced Shiny app object using shinyApp
+shinyApp(ui, server)
+```
+
+## **Dropdown**
+Just like other inputs which `selectInput` which takes minimum parameters like inputId, label and other, it also takes choices parameter which allows you specify the dropdown items in the select button <br>
+
+`pick a colour = ""` allows you to a label that says pick a colour <br>
+
+`choices = c("pick a colour" = "", "red", "green", "yellow", "purple")` allows you to specify a series of choices the user can pick from.
+
+ we can also add the parameter called `multiple = TRUE` which allows users to choose multiple options <br>
+ 
+ `selected = "red"` ensures on page load, red is selected by default
+
+```{r}
+ui <- fluidPage(
+  theme = "cerulean",
+  title = "Home",
+  h1("DropDown"),
+  
+  # creates a dropdown
+  selectInput(
+    inputId = "dropdown",
+    label = "Choose your favourite colour",
+    choices = c("pick a colour" = "", "red", "green", "yellow", "purple"),
+    multiple = TRUE,
+    selected = "red"
+    
+  )
+  
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+## **Radio Buttons**
+to make a radio button, you use `radioButtons()` <br>
+the `radioButtons()` in addition to parameters inputId, label, value and placeholder takes choices which specifies the available radio button a user can pick from <BR>
+you can also specify `inline = TRUE` to prevent the radio buttons from stacking up on each other and being on a single line (like an inline element )
+
+```{r}
+
+ui <- fluidPage(
+  h1("Radio Buttons"),
+  theme = "cerulean",
+  
+  radioButtons(
+    inputId = "radio_input",
+    label = "Select your Gender",
+    choices = c("Male", "Female", "Rather not Say"),
+    inline = TRUE
+  )
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+## **Check Boxes**
+check boxes can be made using `checkboxInput()`
+`value = TRUE` allows the checkbox to be checked automatically
+
+```{r}
+
+ui <- fluidPage(
+  h1("Check Boxes"),
+  
+  checkboxInput(
+    inputId = "correction",
+    label = "Apply Benjamini–Hochberg correction",
+    value = TRUE
+    
+  )
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+
+Similar to radio buttons, Shiny apps can provide checkboxes for users to utilize. This can be particularly useful if you would like the users to be able to select multiple options. <br>
+
+in addition to the basic parameters common amongst all input `checkboxGroupInput` can take take the the parameter `inline = TRUE` which allows you to display the checkboxes horizontally rather than vertically and `selected = c("choices)` which allows you to define the default selection, otherwise the default selection will be nothing checked. You can also have multiple selected options by putting the selected options into a vector
+
+```{r}
+
+ui <- fluidPage(
+  h1("Check Boxes"),
+  
+  checkboxGroupInput(
+    inputId = "correction_1",
+    label = "Which fruit(s) do you like?",
+    choices = c("apple", "kiwi", "Mango", "Pineapple"),
+    inline = TRUE,
+    selected = c("apple", "kiwi")
+    
+  )
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+
+
+```
+
+## Dates
+
+The input widget for dates allows you to select a specific date from a dropdown calendar. There are two functions that allow you to create date inputs:
+
+- `dateInput()` allows you to select a single date
+- `dateRangeInput()` allows you to select a range of dates
+
+
+## Date Input
+
+`dateInput()` can take various parameters, including:
+
+- `value = "2024-07-24"`  
+  Sets the **default date** shown when the calendar opens.  
+  If not set, it defaults to the **current date** in `yyyy-mm-dd` format.
+
+- `min = "2024-07-20"`  
+  Sets the **earliest selectable date**.
+
+- `max = "2024-07-28"`  
+  Sets the **latest selectable date**.
+
+- `weekstart = 1`  
+  Sets the **first day of the week** in the calendar.  
+  - `0` = Sunday  
+  - `1` = Monday  
+  - `6` = Saturday  
+
+- `language = "de"`  
+  Sets the calendar language to **German**.  
+  Other common options include:
+  - `"en"` — English  
+  - `"fr"` — French  
+  - `"es"` — Spanish  
+
+- `daysofweekdisabled = c(0, 6)`  
+  Disables selection of specific days of the week.  
+  In this example:
+  - `0` = Sunday  
+  - `6` = Saturday  
+
+Only **weekdays** can be selected.
+
+
+```{r}
+
+ui <- fluidPage(
+  h1("Date"),
+  dateInput(
+    inputId = "date",
+    label = "Enter your birthday",
+    value = "2024-07-24",
+    min = "2024-07-24",
+    max = "2024-07-28",
+    #language = "fr",
+    daysofweekdisabled = c(0, 6)
+    
+  )
+  
+  
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+
+## DateRangeInput
+
+```{r}
+
+ui <- fluidPage(
+  h1("Date"),
+  dateRangeInput(
+    inputId = "date",
+    label = "Enter booking date",
+
+    
+  )
+  
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+
+
+## Exercise
+
+In this exercise, you will use the input widgets presented above and the associated code to create your own **R Shiny app**. The app will take numeric input from a **select dropdown menu**, **radio buttons**, and a **slider**, multiply the selected values together, and display the resulting product.
+
+Let’s break this down into a few parts:
+
+1. **Create the user interface** for the app that allows the user to:
+   - Select values **1–3** using a `selectInput()` function  
+   - Select values **4–6** using a `radioButtons()` function  
+   - Select values **7–9** using a `sliderInput()` function  
+
+2. **In the user interface**, create a place for the output text where the product of these values will be displayed.
+
+3. **Create a server function** for the app that:
+   - Multiplies the three input values together  
+   - Renders their product as text  
+   - *(Hint: You will need to wrap each input in an `as.numeric()` function.)*
+
+4. **Run the app** and verify that the correct product is displayed when the inputs change.
+
+
+```{r}
+
+ui <-  fluidPage(
+  h1("Exercise Solutions"),
+  
+  selectInput(
+    inputId = "number_one",
+    label = "Choose a number (1–3)",
+    choices = c("Pick a number" = "", "1", "2", "3")
+    
+  ),
+  
+  radioButtons(
+    inputId = "number_two",
+    label = "Choose a number (4–6)",
+    choices = c(4, 5, 6),
+    selected = character(0) # ensures no selection is made
+    
+  ),
+  
+  sliderInput(
+    inputId = "number_three",
+    label = "Choose a number",
+    min = 0,
+    max = 100,
+    value = 0,
+    post = " kg",
+    ticks = FALSE
+
+  ),
+  
+  tags$div(
+    style = "text-align: center;",
+    textOutput("product"),
+    br(),
+    
+  )
+  
+)
+
+server <- function(input, output, session) {
+  output$product <- renderText({
+    as.numeric(input$number_one) * as.numeric(input$number_two) * as.numeric(input$number_three)
+  })
+  
+
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+## **Conditional Panel**
+Suppose you want some input appearing to be conditional on another input's value. This is a good place to utilize the conditionalPanel() function. The general syntax for using conditionalPanel() is: <br>
+
+```
+conditionalPanel(
+  condition = "input.<variable_name/inputId value> == '<value>'",
+  <what_to_appear_if_the_condition_is_true>
+)
+```
+
+Below is an example of using the conditionalPanel(). In this example, the user selects 'Yes' or 'No', and if they select 'Yes', then they are prompted to select from a list of courses that they have taken. If they select 'No', there is nothing further.
+
+```{r}
+ui <- fluidPage(
+  h1("Conditional Panel"),
+  title = "Conditional Panels",
+  
+  selectInput(
+    inputId = "question",
+    label = "Have you taken a Current Topics in Bioinformatics module with us before?",
+    choices = c("Please answer" = "", "Yes", "No")
+  ),
+  
+  conditionalPanel(
+    condition = "input.question == 'Yes'",
+    selectInput(
+      inputId = "course",
+      label = "Select Course Taken",
+      choices = c("Select a course" = "", "R", "Python", "SQL", "Bash")
+    )
+  ),
+  textOutput("selection")  
+)
+
+server <- function(input, output, session) {
+  output$selection <- renderText({
+    input$course
+  })
+  
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+
+## **Required Input**
+
+We may have situation in which the app requires input in order for later code to be evaluated. We can actually see an example of this in the previous app. If you still have the previous app open, select "Yes", then select a course of your choosing. Next, change the input to "No". You'll see that the course selections we've made are still present!
+
+If we didn't want this type of contradiction (i.e if they select "No" then there should not be any course selections present), then one way that we could resolve this is with the use of the req() function.
+
+when trying to achieve this, we use place `req()` inside the the `renderText()` function
+which tells Shiny that we are **req**uiring `input$question` to be match to "Yes" in order to have the input$question text rendered.
+
+
+```{r}
+ui <- fluidPage(
+  h1("Conditional Panel"),
+  title = "Conditional Panels",
+  
+  selectInput(
+    inputId = "question",
+    label = "Have you taken a Current Topics in Bioinformatics module with us before?",
+    choices = c("Please answer" = "", "Yes", "No")
+  ),
+  
+  conditionalPanel(
+    condition = "input.question == 'Yes'",
+    selectInput(
+      inputId = "course",
+      label = "Select Course Taken",
+      choices = c("Select a course" = "", "R", "Python", "SQL", "Bash")
+    )
+  ),
+  textOutput("selection")  
+)
+
+server <- function(input, output, session) {
+  output$selection <- renderText({
+    req(input$question == "Yes")
+    input$course
+  })
+  
+}
+
+shinyApp(ui = ui, server = server)
+```
