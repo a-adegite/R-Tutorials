@@ -56,7 +56,7 @@ plot(1:40, col="red", pch=20, cex=1.5)
 
 # Making a line graph
 
-plot(1:100, col="skyblue", type="l", lwd=4, lty=3)
+plot(1:100, col="skyblue", type="l", lwd=3, lty=3)
 # plot(1:100): creates a sequence of numbers from 1 to 100
 # col="skyblue": changes the color of the line to sky blue
 # type="l": tells R to draw a line instead of just points
@@ -190,3 +190,56 @@ y <- c(10, 13, 20, 30)
 # - names.arg = labels under each bar
 # - width = controls the thickness of each bar
 barplot(y, names.arg = x, width = c(2, 4, 6, 8))
+
+df <- iris
+head(df)
+x <- c("sepal width", "petal width", "sepal length")
+barplot(c(mean(df$Sepal.Width), mean(df$Petal.Length), mean(df$Sepal.Length)), col="red",
+        names.arg=x, xlab="iris")
+  
+plot(df$Sepal.Length, df$Petal.Length, ylim = c(0,8), col="gray",
+     pch=21, bg="tomato", main="Correlation of Sepal Length vs Petal Length",
+     xlab="Sepal Length", ylab="Petal Length")
+
+# Create a scatter plot of Sepal Length (x-axis) vs Petal Length (y-axis)
+# Each point represents an observation from the dataframe `df`
+# Color the points based on species, using different colors for each species
+# Use solid circles for the points (pch=19)
+# Add a main title and axis labels
+plot(df$Sepal.Length,              # x-axis: Sepal Length
+     df$Petal.Length,              # y-axis: Petal Length
+     col = factor(df$Species),     # color points based on species (converted to factor)
+     pch = 19,                     # point character: solid circle
+     main = "Correlation of Sepal Length vs Petal Length",  # plot title
+     xlab = "Sepal Length",        # label for x-axis
+     ylab = "Petal Length")        # label for y-axis
+# Add a legend to help identify species based on color
+legend("topleft",                  # position of the legend on the plot
+       levels(df$Species),         # legend labels (unique species names)
+       col = 1:3,                  # color codes for species:
+       # 1 = black, 2 = red, 3 = green (base R default colors)
+       pch = 19)                   # match the point style used in the plot (solid circles)
+
+
+palette() # this shows base R default colours (usually 8 in total)
+barplot(1:8, col=1:8) # this plots a graph with 8 plots and color each plot with R base colours
+
+# Assign the built-in ToothGrowth dataset to a new variable called tooth_data
+tooth_data <- ToothGrowth
+
+# Display the first 6 rows of the dataset to preview its structure
+head(tooth_data)
+
+boxplot(tooth_data$len,    
+        data = tooth_data,                  
+        col = "tomato",
+        xlab = "Dosage",                  
+        ylab = "Tooth Length")  
+
+# Create a boxplot to visualize how tooth length varies with dosage levels
+boxplot(tooth_data$len ~ tooth_data$dose,    # formula: len (tooth length) by dose (amount of supplement)
+        data = tooth_data,                   # specify the data frame
+        col = "tomato",
+        xlab = "Dosage",                     # label for x-axis
+        ylab = "Tooth Length")               # label for y-axis
+
