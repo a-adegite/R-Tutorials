@@ -117,4 +117,3 @@ volcano_neu <-  ggplot( # <- saves the plot as an object called volcano_neu
   scale_x_continuous(limits = c(-1.5, 1.5)) # sets x-axis limits from -1.5 to 1.5
 
 volcano_neu # displays the plot stored in volcano_neu
-```
