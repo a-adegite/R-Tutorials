@@ -1,5 +1,9 @@
 library(ggplot2)
 library(tidyverse)
+library(RColorBrewer)
+library(viridis)
+library(scales)
+library(cowplot)
 
 df = read.csv("data/pp_all_normalized_counts.csv", row.names = 1)
 meta = read.csv("data/pp_all_meta.csv", row.names = 1)
@@ -51,6 +55,9 @@ prdm16_exp <- expression_plot %>%
            genotype == "WT")     
 
 pax6_exp$group <- factor(pax6_exp$group, levels = c("Pax6:WT", "Tbr2:WT", "neg:WT"))
+eomes_exp <- factor(eomes_exp$group, levels = c("Pax6:WT", "Tbr2:WT", "neg:WT"))
+tubb3_exp <- factor(tubb3_exp$group, levels = c("Pax6:WT", "Tbr2:WT", "neg:WT"))
+prdm16_exp <- factor(prdm16_exp$group, levels = c("Pax6:WT", "Tbr2:WT", "neg:WT"))
 
 View(pax6_exp)
 
@@ -61,7 +68,8 @@ ggplot(
   aes(
     x = group,
     y = normalized_counts,
-    fill = group
+    fill = group,
+    linetype = group
   )
 )+
   geom_boxplot()+
@@ -107,6 +115,161 @@ ggplot(
   # Here, the y-axis starts at 0 and ends at 100.
   # breaks specifies where the tick marks and numbers # should appear on the y-axis. 
   # Here, the tick marks will appear at 20, 40, 60, 80 and 100.
-  scale_y_continuous(limits = c(0,100), breaks = c(20, 40, 60, 80, 100)) 
+  scale_y_continuous(limits = c(0,50), breaks = c(10, 20, 30, 40, 50))+
+  # Let's you choose colour for eachc category
+  scale_fill_manual(values = c("firebrick4", "lightsteelblue", "yellow2"))
 
+# RColorBrewer allows you to selecte a predefine colour palettes
+# To check all available colour pallete we use
+display.brewer.all() # Check the available color palettes
 
+# The palettes are separated into three sections based on the type of data:
+# Sequential palettes (top): For sequential data, with lighter colors for low values and darker colors for high values.
+# Qualitative palettes (middle): For categorical data, where the color does not denote differences in magnitude or value.
+# Diverging palettes (bottom): For data with emphasis on mid-range values and extremes.
+
+# For the boxplot, we can choose how many colours from the palette to remove
+# display.brwer.pal is basically saying show me the colors in a particular ColorBrewer palette.
+# 5 means show me 3 colours from the palette
+# Set1 is the name of the palette
+# There are different categories/group for each palette
+# Qualitative palettes categories include
+# "Accent"
+# "Dark2"
+# "Set1"
+# "Set2"
+
+# Sequential palettes
+# "Blues"
+# "BuGn"
+# "BuPu"
+
+# Diverging palettes
+# "RdYlBu"
+# "RdYlGn"
+# "Spectral"
+display.brewer.pal(5, "Set1")
+
+# Finding color-blind friendly palettes
+display.brewer.all(colorblindFriendly = TRUE)
+
+display.brewer.pal(3, "Dark2")
+
+# To use this palette in our plots, we need to define it with brewer.pal()  and save it in a variable
+
+palette <- brewer.pal(3, "Dark2")
+palette
+
+# to use the palette
+ggplot(
+  pax6_exp,
+  aes(
+    x = group,
+    y = normalized_counts,
+    color = group
+  )
+)+
+  geom_boxplot()+
+  labs(
+    title = "Pax6",
+    y = "Normalized_counts"
+  )+
+  custom_theme()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust =1)
+  )+
+  scale_x_discrete(
+    labels = c(
+      "Pax6:WT" = "Radial Glia",
+      "Tbr2:WT" = "Neurons",
+      "neg:WT" = "Progenitors"
+    ) 
+  )+
+  scale_color_manual(values = palette)
+
+# When we created our plot, we used the fill argument within the aes() function; 
+# therefore, to change the colors of these groups, we need to use the scale_fill_manual(). 
+# If we had used the color argument within the aes() function, we would use the scale_color_manual().
+
+# Viridis palettes
+# The viridis R package contain palettes that represent good choices for color-blind friendly palettes 
+# and printing in gray scale. The developers provide additional information about each of the eight color 
+# palettes available, including how it is visualized with different types of color-blindness and in gray scale.
+
+ggplot(
+  pax6_exp,
+  aes(
+    x = group,
+    y = normalized_counts,
+    fill = group
+  )
+)+
+  geom_boxplot()+
+  labs(
+    title = "Pax6",
+    y = "Normalized counts",
+  )+
+  custom_theme()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )+
+  scale_x_discrete(
+    labels = c(
+      "Pax6:WT" = "Radial Glia",
+      "Tbr2:WT" = "Neurons",
+      "neg:WT" = "Progenitors"
+    ) 
+  )+
+  scale_fill_viridis(discrete = TRUE)
+
+# We could specify the palette manually using the hexadecimal code. 
+# The hexadecimal codes for each color can be identified using the viridis_pal() 
+# and show_col() functions from the scales package.
+show_col(viridis_pal(option = "viridis")(30))
+         
+
+# It creates a color palette generator.
+# Think of it as give me a function that can generate colors from the Viridis palette
+viridis_pal(option = "viridis") # This creates the function
+
+# What does option = "viridis" mean?
+# Viridis has several different palette options.
+# For example:
+# viridis_pal(option = "viridis")
+# viridis_pal(option = "magma")
+# viridis_pal(option = "plasma")
+# You're saying:
+# option = "viridis"
+# "Use the standard viridis palette."
+# So:
+viridis_pal(option = "viridis")
+# means:
+# Create a Viridis color generator using the viridis palette.
+viridis_pal(option = "viridis")(30) # Means generate 30 colours from the viridis palette
+# show_col() # displays the colours in hex codes
+
+ggplot(
+  pax6_exp,
+  aes(
+    x = group,
+    y = normalized_counts,
+    fill = group
+  )
+)+
+  geom_boxplot()+
+  labs(
+    title = "Pax6",
+    y = "Normalized counts",
+  )+
+  custom_theme()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+  )+
+  scale_x_discrete(
+    labels = c(
+      "Pax6:WT" = "Radial Glia",
+      "Tbr2:WT" = "Neurons",
+      "neg:WT" = "Progenitors"
+    ) 
+  )+
+  scale_fill_viridis(discrete = TRUE, option = "viridis", begin = 0.2)

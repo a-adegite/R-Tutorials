@@ -1,4 +1,3 @@
-```r
 library(ggplot2) # library() loads a package; ggplot2 is used for plotting
 
 # Read in the metadata file
