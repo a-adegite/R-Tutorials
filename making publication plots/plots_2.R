@@ -2,7 +2,7 @@ library(ggplot2)
 library(tidyverse)
 library(RColorBrewer)
 library(viridis)
-library(scales)
+# library(scales)
 library(cowplot)
 
 df = read.csv("data/pp_all_normalized_counts.csv", row.names = 1)
@@ -25,7 +25,7 @@ custom_theme <- function(){
     )
 }
 
-expression_plot <- pivot_longer(normalized_counts,
+expression_plot <- pivot_longer(df,
                                 cols = 2:25,
                                 names_to = "samples",
                                 values_to = "normalized_counts")
