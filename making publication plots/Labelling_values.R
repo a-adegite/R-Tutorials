@@ -169,4 +169,142 @@ ggdraw(volcano_RG) +
              size = 12,
              hjust = 0,
              vjust = 0)
-  
+
+# Create IP volcano plot
+volcano_IP <- ggplot(
+  result,
+  aes(
+    x = tbr2_log2FoldChange,
+    y = -log10(tbr2_padj),
+    colour = tbr2_threshold
+  )
+)+
+  geom_point()+
+  labs(
+    title = "Intermediate progenitors",
+    x = "Log2 fold change",
+    y = "-Log10 p-value"
+  )+
+  custom_theme()+
+  scale_color_manual(values = c("grey", "purple"))+
+  scale_x_continuous(limits = c(-3,3.5))
+
+volcano_neu <- ggplot(
+  result,
+  aes(
+    x = neg_log2FoldChange,
+    y = -log10(neg_padj),
+    colour = neg_threshold
+  )
+)+
+  geom_point()+
+  labs(
+    title = "cortical neurons",
+    x = "Log2 fold change",
+    y = "-Log10 p-value"
+  )+
+  custom_theme()+
+  scale_color_manual(values = c("grey", "purple"))+
+  scale_x_continuous(limits = c(-3,3.5))
+
+# Annotating all figures
+volcano_panel1 <- ggdraw(volcano_RG) +
+  draw_label(
+    "664 genes",
+    size = 12,
+    hjust = 0,
+    vjust = 0,
+    x = 0.15, 
+    y = 0.82,
+    fontface = "bold",
+  )+
+  draw_label(
+    "Down \n247 genes",
+    x = 0.15,
+    y = 0.2,
+    size = 12,
+    hjust = 0,
+    vjust = 0
+  )+
+  draw_label(
+    "Up \n417 genes",
+    x = 0.77,
+    y = 0.2,
+    size = 12,
+    hjust = 0,
+    vjust = 0
+  ) 
+        
+volcano_panel2 <- ggdraw(volcano_IP)+
+  draw_label(
+    "405 genes",
+    size = 12,
+    hjust = 0,
+    vjust = 0,
+    x = 0.15,
+    y = 0.82,
+    fontface = "bold"
+  )+
+  draw_label(
+    "Down \n164 genes",
+    size = 12,
+    hjust = 0,
+    vjust = 0,
+    x = 0.15,
+    y = 0.2
+  )+
+  draw_label(
+    "Up \n241 genes",
+    size = 12,
+    hjust = 0,
+    vjust = 0,
+    x = 0.77,
+    y = 0.2
+  )
+
+volcano_panel3 <- ggdraw(volcano_neu)+
+  draw_label(
+    "33 genes",
+    size = 12,
+    hjust = 0,
+    vjust = 0,
+    x = 0.15,
+    y = 0.82,
+    fontface = "bold"
+  )+
+  draw_label(
+    "Down \n21 genes",
+    size = 12,
+    vjust = 0,
+    hjust = 0,
+    x = 0.15,
+    y = 0.2
+  )+
+  draw_label(
+    "Up \n12 genes",
+    size = 12,
+    vjust = 0,
+    hjust = 0,
+    x = 0.8,
+    y = 0.2
+  )
+
+volcano_grid <- plot_grid(
+  volcano_panel1,
+  volcano_panel2,
+  volcano_panel3,
+  ncol = 3
+)
+
+# Save plot
+ggsave(
+  plot = volcano_grid,
+  filename = "results/fig4G.png",
+  width = 14,
+  height = 3,
+  units = "in",
+  device = png,
+  dpi = 500
+)
+
+# Adding statistical comparisons
