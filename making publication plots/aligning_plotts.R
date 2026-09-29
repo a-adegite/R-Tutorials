@@ -208,6 +208,12 @@ first_row <- plot_grid(
   nrow = 1
 )  
 
+ggsave(filename = "results/fig4ABC.png", 
+       plot = first_row,
+       units = "in", 
+       width = 8.5,
+       height = 13/4,
+       dpi = 500)
 
 # arrange the second row of the figure
 # here, we arrange figures 4D and 4E side by side
